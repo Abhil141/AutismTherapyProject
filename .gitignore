@@ -23,3 +23,6 @@ venv/
 session_log.json
 session_log1.json
 session_metrics.json
+session_log.json
+session_log1.json
+session_metrics.json
