@@ -1,0 +1,10 @@
+opencv-python
+opencv-contrib-python
+tensorflow-macos
+tensorflow
+fer
+numpy
+pygame
+pydub
+matplotlib
+Pillow
