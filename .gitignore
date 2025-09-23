@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+.env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE files
+.vscode/
+.idea/
+
+# MacOS files
+.DS_Store
+
+# Logs and temp
+*.log
+*.tmp
+
+venv/
+session_log.json
+session_log1.json
+session_metrics.json
