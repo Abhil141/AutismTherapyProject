@@ -1,6 +1,9 @@
+# sensory_coach_with_audio.py
 import sys
 import uuid
 import time
+import threading
+import queue
 import numpy as np
 from fer import FER
 from PyQt6 import QtCore
@@ -13,6 +16,17 @@ import cv2
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import pygame
+
+# --- NEW audio libs ---
+import sounddevice as sd
+import librosa
+import collections
+from threading import Lock
+
+# ---------- CONFIG ----------
+MIC_DEVICE_INDEX = 1   # adjust this if your mic is at a different index
+device_info = sd.query_devices(MIC_DEVICE_INDEX, "input")
+MIC_CHANNELS = device_info["max_input_channels"] if device_info["max_input_channels"] > 0 else 1
 
 session_id = str(uuid.uuid4())
 session_start = None
@@ -32,7 +46,13 @@ messages = {
     "Overload Risk": "Pause for a moment, you've got this."
 }
 
+VIDEO_WEIGHT = 0.6
+AUDIO_WEIGHT = 0.4
+
+# ---------- UTIL ----------
 def get_stress_score(emotion, score):
+    if not emotion:
+        return 0.0
     if emotion in ["happy", "neutral"]:
         return -15 * score
     elif emotion == "surprise":
@@ -42,15 +62,176 @@ def get_stress_score(emotion, score):
     return 0
 
 def start_music(volume=0.3):
-    pygame.mixer.music.load(MUSIC_FILE)
-    pygame.mixer.music.set_volume(volume)
-    pygame.mixer.music.play(-1)
+    try:
+        pygame.mixer.music.load(MUSIC_FILE)
+        pygame.mixer.music.set_volume(volume)
+        pygame.mixer.music.play(-1)
+    except Exception as e:
+        print("Could not start music:", e)
 
 def set_music_volume(volume):
-    pygame.mixer.music.set_volume(volume)
+    try:
+        pygame.mixer.music.set_volume(volume)
+    except Exception:
+        pass
 
 def stop_music():
-    pygame.mixer.music.stop()
+    try:
+        pygame.mixer.music.stop()
+    except Exception:
+        pass
+
+# =========================
+# Audio listener
+# =========================
+class AudioListener:
+    def __init__(self, device=None, samplerate=16000, block_duration=0.6, channels=1):
+        self.samplerate = samplerate
+        self.block_duration = block_duration
+        self.blocksize = int(samplerate * block_duration)
+        self.device = device
+        self.channels = channels
+        self._q = queue.Queue(maxsize=40)
+        self._stream = None
+        self._thread = None
+        self.running = False
+        self.lock = Lock()
+        self.latest_emotion = None
+        self.latest_score = 0.0
+        self.history = collections.deque(maxlen=6)
+
+    def _audio_callback(self, indata, frames, time_info, status):
+        if status:
+            pass
+        arr = indata.copy()
+        if arr.ndim > 1:  # average to mono
+            arr = np.mean(arr, axis=1)
+        try:
+            self._q.put_nowait(arr)
+        except queue.Full:
+            pass
+
+    def _processing_loop(self):
+        while self.running:
+            try:
+                block = self._q.get(timeout=0.5)
+            except queue.Empty:
+                continue
+            try:
+                emotion, conf = self._infer_emotion_from_audio(block)
+            except Exception as e:
+                print("Audio processing error:", e)
+                continue
+
+            with self.lock:
+                self.history.append((emotion, conf))
+                votes = {}
+                for emo, c in self.history:
+                    votes.setdefault(emo, 0.0)
+                    votes[emo] += c
+                best = max(votes.items(), key=lambda x: x[1])
+                self.latest_emotion = best[0]
+                self.latest_score = float(min(1.0, votes[best[0]] / (len(self.history) + 1e-6)))
+            time.sleep(0.01)
+
+    def _infer_emotion_from_audio(self, audio_block):
+        audio = audio_block.astype(np.float32).flatten()
+        if audio.size == 0:
+            return ("neutral", 0.0)
+        peak = np.max(np.abs(audio)) + 1e-9
+        audio = audio / peak
+
+        try:
+            rms = float(np.sqrt(np.mean(audio**2)))
+        except Exception:
+            rms = 0.0
+        try:
+            centroid = float(np.mean(librosa.feature.spectral_centroid(y=audio, sr=self.samplerate)))
+        except Exception:
+            centroid = 0.0
+        try:
+            zcr = float(np.mean(librosa.feature.zero_crossing_rate(audio)))
+        except Exception:
+            zcr = 0.0
+        try:
+            mfcc = librosa.feature.mfcc(y=audio, sr=self.samplerate, n_mfcc=13)
+            mfcc0 = float(np.mean(mfcc[0]))
+        except Exception:
+            mfcc0 = 0.0
+
+        act_norm = min(1.0, rms * 10.0)
+        bright_norm = min(1.0, centroid / (self.samplerate/4 + 1e-9))
+        zcr_norm = min(1.0, zcr * 5.0)
+
+        angry_score = max(0.0, act_norm * 0.6 + bright_norm * 0.3 + zcr_norm * 0.1)
+        sad_score = max(0.0, (1 - act_norm) * 0.6 + (1 - bright_norm) * 0.3)
+        neutral_score = max(0.0, 1 - abs(act_norm - 0.4) - abs(bright_norm - 0.35))
+        happy_score = max(0.0, 0.5*act_norm + 0.5*(1 - abs(mfcc0)/50.0))
+        surprise_score = max(0.0, 0.8*act_norm * bright_norm)
+
+        score_map = {
+            "angry": angry_score,
+            "sad": sad_score,
+            "neutral": neutral_score,
+            "happy": happy_score,
+            "surprise": surprise_score
+        }
+        label, raw_score = max(score_map.items(), key=lambda x: x[1])
+        conf = float(min(1.0, raw_score))
+        if conf < 0.12:
+            label = "neutral"
+            conf = max(conf, 0.2)
+        return (label, conf)
+
+    def start(self):
+        if self.running:
+            return
+        self.running = True
+        try:
+            self._stream = sd.InputStream(
+                samplerate=self.samplerate,
+                device=self.device,
+                channels=self.channels,
+                blocksize=self.blocksize,
+                callback=self._audio_callback
+            )
+            self._stream.start()
+            print(f"Audio stream started on device {self.device} with {self.channels} channel(s)")
+        except Exception as e:
+            print("Audio input stream error:", e)
+            self.running = False
+            return
+
+        self._thread = threading.Thread(target=self._processing_loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self.running = False
+        try:
+            if self._stream:
+                self._stream.stop()
+                self._stream.close()
+        except Exception:
+            pass
+        with self._q.mutex:
+            self._q.queue.clear()
+
+# global audio listener
+audio_listener = AudioListener(device=MIC_DEVICE_INDEX, samplerate=16000, block_duration=0.6, channels=MIC_CHANNELS)
+
+# =========================
+# GUI (mostly as original) with audio integration improvements
+# =========================
+
+def combine_scores(video_emotion, video_score, audio_emotion, audio_score):
+    """
+    Combine video + audio contributions into a single stress delta.
+    video_score and audio_score are 0..1 confidences as returned from FER / audio heuristics
+    """
+    v_contrib = get_stress_score(video_emotion, video_score) if video_emotion else 0.0
+    a_contrib = get_stress_score(audio_emotion, audio_score) if audio_emotion else 0.0
+    combined = VIDEO_WEIGHT * v_contrib + AUDIO_WEIGHT * a_contrib
+    return combined
 
 class SensoryCoachApp(QMainWindow):
     def __init__(self):
@@ -101,7 +282,7 @@ class SensoryCoachApp(QMainWindow):
             self.show_summary()
 
     def start_session(self):
-        global cap, running, session_start, session_log
+        global cap, running, session_start, session_log, audio_listener
         session_log = []
         session_start = time.time()
         cap = cv2.VideoCapture(0)
@@ -109,14 +290,24 @@ class SensoryCoachApp(QMainWindow):
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         running = True
         start_music(0.3)
+        # START audio listener
+        try:
+            audio_listener.start()
+        except Exception as e:
+            print("Could not start audio listener:", e)
         self.monitor_page.start_timer()
 
     def finish_session(self):
-        global running, metrics, session_log, cap, session_start
+        global running, metrics, session_log, cap, session_start, audio_listener
         running = False
         if cap:
             cap.release()
         stop_music()
+        # stop audio
+        try:
+            audio_listener.stop()
+        except Exception:
+            pass
 
         session_end = time.time()
         duration = session_end - session_start
@@ -207,7 +398,7 @@ class SensoryCoachApp(QMainWindow):
         with open("session_metrics.json", "w") as f:
             json.dump(all_metrics, f, indent=2)
 
-        self.show_feedback()    
+        self.show_feedback()
 
 class StartPage(QWidget):
     def __init__(self, main):
@@ -285,11 +476,17 @@ class MonitorPage(QWidget):
         self.new_volume = 0.3
         self.stress_score = 0
 
+        # Keep last known non-zero scores for reliable display
+        self.last_video_score = 0.0
+        self.last_audio_score = 0.0
+        self.last_video_emotion = None
+        self.last_audio_emotion = None
+
     def start_timer(self):
         self.timer.start(30)
 
     def update_frame(self):
-        global running, session_log, cap
+        global running, session_log, cap, audio_listener
         if not running:
             self.timer.stop()
             return
@@ -299,19 +496,64 @@ class MonitorPage(QWidget):
 
         h_label = self.label.height()
         w_label = self.label.width()
+        # protect against tiny widget sizes
+        if h_label < 50 or w_label < 50:
+            h_label, w_label = 480, 640
         frame = cv2.resize(frame, (w_label, int(h_label*0.9)))
 
         self.frame_counter += 1
 
+        video_emotion, video_score = (None, 0.0)
+        audio_emotion, audio_score = (None, 0.0)
+
+        # Video: sample every N frames for performance
         if self.frame_counter % 10 == 0:
             small_frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
-            emotions = detector.detect_emotions(small_frame)
-            if emotions:
-                self.dominant_emotion, self.emo_score = detector.top_emotion(small_frame)
-                self.stress_score += get_stress_score(self.dominant_emotion, self.emo_score)
+            try:
+                emotions = detector.detect_emotions(small_frame)
+                if emotions:
+                    video_emotion, video_score = detector.top_emotion(small_frame)
+                    video_score = float(np.clip(video_score, 0.0, 1.0))
+                else:
+                    video_emotion, video_score = (None, 0.0)
+            except Exception as e:
+                video_emotion, video_score = (None, 0.0)
+                # print("FER error:", e)
 
+            # Read latest audio emotion (thread-safe)
+            with audio_listener.lock:
+                audio_emotion = audio_listener.latest_emotion
+                audio_score = float(audio_listener.latest_score)
+
+            # keep last valid values if current are None/0
+            if video_emotion:
+                self.last_video_emotion = video_emotion
+            if video_score and video_score > 0:
+                self.last_video_score = video_score
+            if audio_emotion:
+                self.last_audio_emotion = audio_emotion
+            if audio_score and audio_score > 0:
+                self.last_audio_score = audio_score
+
+            # combine using last-known valid values for display and for stress delta
+            used_video_emotion = video_emotion or self.last_video_emotion
+            used_video_score = video_score or self.last_video_score
+            used_audio_emotion = audio_emotion or self.last_audio_emotion
+            used_audio_score = audio_score or self.last_audio_score
+
+            combined_delta = combine_scores(used_video_emotion, used_video_score, used_audio_emotion, used_audio_score)
+            # Apply an extra scaling to make stress changes visible but smooth
+            # (you may tune or remove this scale)
+            self.stress_score += combined_delta
+
+            # keep internal storage of last detected emotions for display
+            self.dominant_emotion = used_video_emotion or used_audio_emotion
+            self.emo_score = max(used_video_score, used_audio_score)
+
+        # clamp stress to 0..100
         self.stress_score = max(0, min(100, self.stress_score))
 
+        # map stress to states (same as before)
         if self.stress_score < thresholds["calm"]:
             self.state = "Calm"
             self.color = (0, 255, 255)
@@ -319,11 +561,11 @@ class MonitorPage(QWidget):
         elif self.stress_score < thresholds["mild"]:
             self.state = "Mild Stress"
             self.color = (0, 255, 0)
-            self.new_volume = min(0.7, 0.3+self.emo_score)
+            self.new_volume = min(0.7, 0.3 + self.emo_score)
         else:
             self.state = "Overload Risk"
             self.color = (0, 0, 255)
-            self.new_volume = min(1.0, 0.5+self.emo_score)
+            self.new_volume = min(1.0, 0.5 + self.emo_score)
 
         set_music_volume(self.new_volume)
 
@@ -332,11 +574,14 @@ class MonitorPage(QWidget):
             "time": time.time(),
             "emotion": self.dominant_emotion,
             "score": float(self.emo_score),
+            "audio_emotion": audio_emotion,
+            "audio_score": float(audio_score),
             "stress_score": float(self.stress_score),
             "state": self.state,
             "volume": float(self.new_volume)
         })
 
+        # Drawing UI overlay on frame (same as original)
         h, w, _ = frame.shape
         cv2.rectangle(frame, (0,0), (w,100), (20,20,20), -1)
         cv2.putText(frame, "SensoryCoach - Stress Monitor", (20,40),
@@ -358,8 +603,15 @@ class MonitorPage(QWidget):
         cv2.putText(frame, f"Volume: {self.new_volume:.2f}", (vol_x + vol_w + 20, vol_y + 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
 
-        cv2.rectangle(frame, (0, h-50), (w,h), (20,20,20), -1)
-        cv2.putText(frame, messages[self.state], (30, h-20), cv2.FONT_HERSHEY_DUPLEX, 1, (255,255,255), 2)
+        cv2.rectangle(frame, (0, h-80), (w,h), (20,20,20), -1)
+        # show both detected emotions line - use last-known values so 0.00 doesn't stick
+        disp_video_emotion = (video_emotion or self.last_video_emotion or "-")
+        disp_video_score = (video_score or self.last_video_score or 0.0)
+        disp_audio_emotion = (audio_emotion or self.last_audio_emotion or "-")
+        disp_audio_score = (audio_score or self.last_audio_score or 0.0)
+        disp_line = f"Video: {disp_video_emotion} ({disp_video_score:.2f})  |  Audio: {disp_audio_emotion} ({disp_audio_score:.2f})"
+        cv2.putText(frame, disp_line, (30, h-40), cv2.FONT_HERSHEY_DUPLEX, 0.6, (255,255,255), 1)
+        cv2.putText(frame, messages[self.state], (30, h-15), cv2.FONT_HERSHEY_DUPLEX, 1, (255,255,255), 2)
 
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
@@ -524,6 +776,11 @@ class GraphsPage(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
+        if not session_log:
+            lbl = QLabel("No session data to plot.")
+            self.canvas_layout.addWidget(lbl)
+            return
+
         times = [e["time"]-session_log[0]["time"] for e in session_log]
         stress = [e["stress_score"] for e in session_log]
         volume = [e["volume"] for e in session_log]
@@ -534,7 +791,7 @@ class GraphsPage(QWidget):
         fig.tight_layout(pad=4.0)
 
         axs[0].set_facecolor('#2E2E2E')
-        axs[0].plot(times, stress, color='red', label='Stress Score')
+        axs[0].plot(times, stress, label='Stress Score')
         axs[0].set_title('Stress Score Over Time', fontsize=14, color='lightcoral')
         axs[0].set_xlabel('Time (sec)', color='white')
         axs[0].set_ylabel('Stress', color='white')
@@ -543,7 +800,7 @@ class GraphsPage(QWidget):
         axs[0].legend(facecolor='#3E3E3E', edgecolor='white', labelcolor='white')
 
         axs[1].set_facecolor('#2E2E2E')
-        axs[1].plot(times, volume, color='cyan', label='Music Volume')
+        axs[1].plot(times, volume, label='Music Volume')
         axs[1].set_title('Music Volume Over Time', fontsize=14, color='cyan')
         axs[1].set_xlabel('Time (sec)', color='white')
         axs[1].set_ylabel('Volume', color='white')
@@ -553,8 +810,8 @@ class GraphsPage(QWidget):
 
         axs[2].set_facecolor('#2E2E2E')
         state_map = {'Calm':0,'Mild Stress':1,'Overload Risk':2}
-        state_vals = [state_map[s] for s in states]
-        axs[2].step(times, state_vals, where='post', color='lime', label='Stress State')
+        state_vals = [state_map.get(s,0) for s in states]
+        axs[2].step(times, state_vals, where='post', label='Stress State')
         axs[2].set_yticks([0,1,2])
         axs[2].set_yticklabels(['Calm','Mild','Overload'], color='white')
         axs[2].set_title('Stress States Over Time', fontsize=14, color='lime')
@@ -571,6 +828,9 @@ if __name__ == "__main__":
     window = SensoryCoachApp()
     window.show()
     sys.exit(app.exec())
+
+
+
 
 
 
