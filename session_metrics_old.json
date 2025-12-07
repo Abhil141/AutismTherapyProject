@@ -1,0 +1,402 @@
+{
+  "metrics": [
+    {
+      "session_id": "428f2168-42f2-4d5b-a9fe-c5fbb3e28ded",
+      "session_duration_sec": 42.6932532787323,
+      "avg_stress_score": 58.06196213425129,
+      "stress_stability": 39.46726065076818,
+      "time_in_states_percent": {
+        "Calm": 32.87435456110155,
+        "Mild Stress": 14.629948364888124,
+        "Overload Risk": 52.49569707401033
+      },
+      "overload_events": 610,
+      "emotion_distribution": {
+        "angry": 410,
+        "fear": 60,
+        "sad": 260,
+        "neutral": 223,
+        "happy": 200
+      },
+      "emotional_balance_index": 0.3668690372940156,
+      "recovery_score": 0.4750430292598967,
+      "engagement_duration_sec": 42.6932532787323,
+      "avg_music_volume": 0.7066265060240963
+    },
+    {
+      "session_id": "e17a30e0-02c6-41ea-bff6-bf8d88eb1de6",
+      "session_duration_sec": 40.95219302177429,
+      "avg_stress_score": 73.0022381378693,
+      "stress_stability": 35.03820615051357,
+      "time_in_states_percent": {
+        "Calm": 14.055505819158459,
+        "Mild Stress": 17.905102954341988,
+        "Overload Risk": 68.03939122649956
+      },
+      "overload_events": 760,
+      "emotion_distribution": {
+        "angry": 510,
+        "neutral": 188,
+        "fear": 20,
+        "sad": 160,
+        "surprise": 10,
+        "happy": 220
+      },
+      "emotional_balance_index": 0.36823104693140796,
+      "recovery_score": 0.31960608773500443,
+      "engagement_duration_sec": 40.95219302177429,
+      "avg_music_volume": 0.8046553267681291
+    },
+    {
+      "session_id": "e17a30e0-02c6-41ea-bff6-bf8d88eb1de6",
+      "session_duration_sec": 2.4393439292907715,
+      "avg_stress_score": 0.0,
+      "stress_stability": 0.0,
+      "time_in_states_percent": {
+        "Calm": 100.0,
+        "Mild Stress": 0.0,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "neutral": 43
+      },
+      "emotional_balance_index": 1.0,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 2.4393439292907715,
+      "avg_music_volume": 0.30000000000000004,
+      "caregiver_ratings": {
+        "calmness level": 3,
+        "attention level": 6,
+        "willingness to engage": 9,
+        "emotional response": 4,
+        "engagement duration": 6
+      }
+    },
+    {
+      "session_id": "e6bd8fce-338d-4f1f-8204-adc25478c24e",
+      "session_duration_sec": 7.697981357574463,
+      "avg_stress_score": 0.0,
+      "stress_stability": 0.0,
+      "time_in_states_percent": {
+        "Calm": 100.0,
+        "Mild Stress": 0.0,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "happy": 10,
+        "neutral": 149
+      },
+      "emotional_balance_index": 1.0,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 7.697981357574463,
+      "avg_music_volume": 0.29999999999999993
+    },
+    {
+      "session_id": "8ddd2230-387e-49c5-8c82-9c0b90ac46d1",
+      "session_duration_sec": 66.30621123313904,
+      "avg_stress_score": 60.562841823056296,
+      "stress_stability": 43.05025525102881,
+      "time_in_states_percent": {
+        "Calm": 36.193029490616624,
+        "Mild Stress": 3.753351206434316,
+        "Overload Risk": 60.05361930294906
+      },
+      "overload_events": 1120,
+      "emotion_distribution": {
+        "happy": 300,
+        "sad": 30,
+        "angry": 890,
+        "fear": 280,
+        "neutral": 356
+      },
+      "emotional_balance_index": 0.35344827586206895,
+      "recovery_score": 0.3994638069705094,
+      "engagement_duration_sec": 66.30621123313904,
+      "avg_music_volume": 0.7235388739946381
+    },
+    {
+      "session_id": "8ddd2230-387e-49c5-8c82-9c0b90ac46d1",
+      "session_duration_sec": 1.5347168445587158,
+      "avg_stress_score": 1.6999999999999997,
+      "stress_stability": 2.6879360111431225,
+      "time_in_states_percent": {
+        "Calm": 100.0,
+        "Mild Stress": 0.0,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "neutral": 14
+      },
+      "emotional_balance_index": 1.0,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 1.5347168445587158,
+      "avg_music_volume": 0.29999999999999993,
+      "caregiver_ratings": {
+        "calmness level": 3,
+        "attention level": 4,
+        "willingness to engage": 7,
+        "emotional response": 4,
+        "engagement duration": 8
+      }
+    },
+    {
+      "session_id": "816faa58-c8bb-43ec-88a6-31b8ade4ff13",
+      "session_duration_sec": 80.99952578544617,
+      "avg_stress_score": 40.24786954234613,
+      "stress_stability": 44.31377981473161,
+      "time_in_states_percent": {
+        "Calm": 55.81273014203051,
+        "Mild Stress": 3.682272488164124,
+        "Overload Risk": 40.504997369805366
+      },
+      "overload_events": 770,
+      "emotion_distribution": {
+        "fear": 10,
+        "surprise": 10,
+        "angry": 710,
+        "sad": 40,
+        "neutral": 1102
+      },
+      "emotional_balance_index": 0.5886752136752137,
+      "recovery_score": 0.5949500263019463,
+      "engagement_duration_sec": 80.99952578544617,
+      "avg_music_volume": 0.5836927932667016
+    },
+    {
+      "session_id": "d357628f-72f6-4c7f-b636-05d73dc6f472",
+      "session_duration_sec": 96.50919008255005,
+      "avg_stress_score": 29.8793627269359,
+      "stress_stability": 41.289107535473725,
+      "time_in_states_percent": {
+        "Calm": 64.06076324564654,
+        "Mild Stress": 7.039644312708411,
+        "Overload Risk": 28.899592441645055
+      },
+      "overload_events": 780,
+      "emotion_distribution": {
+        "surprise": 10,
+        "neutral": 800,
+        "angry": 320,
+        "happy": 60
+      },
+      "emotional_balance_index": 0.7226890756302521,
+      "recovery_score": 0.7110040755835494,
+      "engagement_duration_sec": 96.50919008255005,
+      "avg_music_volume": 0.42067432382363834
+    },
+    {
+      "session_id": "73027e59-721a-4c0f-81e5-c0088be4529f",
+      "session_duration_sec": 50.03219676017761,
+      "avg_stress_score": 27.85098067287043,
+      "stress_stability": 40.23737413140967,
+      "time_in_states_percent": {
+        "Calm": 67.93128131710809,
+        "Mild Stress": 7.874015748031496,
+        "Overload Risk": 24.194702934860416
+      },
+      "overload_events": 338,
+      "emotion_distribution": {
+        "sad": 50,
+        "fear": 50,
+        "happy": 458,
+        "neutral": 130,
+        "angry": 370
+      },
+      "emotional_balance_index": 0.555765595463138,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 50.03219676017761,
+      "avg_music_volume": 0.48468146027201137
+    },
+    {
+      "session_id": "6a67d9d4-7450-4c25-a0cc-b8dfe9178dc4",
+      "session_duration_sec": 115.34951186180115,
+      "avg_stress_score": 31.863108387702194,
+      "stress_stability": 38.77788812512867,
+      "time_in_states_percent": {
+        "Calm": 59.86622073578596,
+        "Mild Stress": 12.76983885679538,
+        "Overload Risk": 27.363940407418667
+      },
+      "overload_events": 900,
+      "emotion_distribution": {
+        "fear": 30,
+        "sad": 170,
+        "surprise": 10,
+        "neutral": 1370,
+        "happy": 340,
+        "angry": 1350
+      },
+      "emotional_balance_index": 0.5229357798165137,
+      "recovery_score": 0.7263605959258133,
+      "engagement_duration_sec": 115.34951186180115,
+      "avg_music_volume": 0.5414715719063544
+    },
+    {
+      "session_id": "43db47b3-7bd3-490e-b7f3-255130015cb1",
+      "session_duration_sec": 45.384840965270996,
+      "avg_stress_score": 68.65057885952581,
+      "stress_stability": 29.874573000438904,
+      "time_in_states_percent": {
+        "Calm": 15.84241408214585,
+        "Mild Stress": 18.440905280804696,
+        "Overload Risk": 65.71668063704945
+      },
+      "overload_events": 784,
+      "emotion_distribution": {
+        "surprise": 10,
+        "sad": 290,
+        "angry": 10,
+        "fear": 30,
+        "neutral": 134,
+        "happy": 710
+      },
+      "emotional_balance_index": 0.7128378378378378,
+      "recovery_score": 0.49706621961441744,
+      "engagement_duration_sec": 45.384840965270996,
+      "avg_music_volume": 1.3256931313997586
+    },
+    {
+      "session_id": "7ac77b6e-3485-4cfd-8049-5b341d4d9b23",
+      "session_duration_sec": 276.6645290851593,
+      "avg_stress_score": 97.84252140679338,
+      "stress_stability": 10.310587529990482,
+      "time_in_states_percent": {
+        "Calm": 0.8262148158521215,
+        "Mild Stress": 0.9802548662652291,
+        "Overload Risk": 98.19353031788265
+      },
+      "overload_events": 7012,
+      "emotion_distribution": {
+        "neutral": 4212,
+        "angry": 630,
+        "happy": 840,
+        "sad": 1000,
+        "surprise": 380,
+        "fear": 70
+      },
+      "emotional_balance_index": 0.7083567021873247,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 276.6645290851593,
+      "avg_music_volume": 1.7242711385333904
+    },
+    {
+      "session_id": "62383017-c8d7-4b1a-aba1-b0e4c1ca79b5",
+      "session_duration_sec": 144.38374304771423,
+      "avg_stress_score": 79.34446055774093,
+      "stress_stability": 29.24768415953762,
+      "time_in_states_percent": {
+        "Calm": 12.354913592984266,
+        "Mild Stress": 18.055197317513542,
+        "Overload Risk": 69.5898890895022
+      },
+      "overload_events": 2698,
+      "emotion_distribution": {
+        "happy": 890,
+        "neutral": 2698,
+        "angry": 180,
+        "sad": 90,
+        "fear": 10
+      },
+      "emotional_balance_index": 0.9276111685625646,
+      "recovery_score": 0.9871034304874903,
+      "engagement_duration_sec": 144.38374304771423,
+      "avg_music_volume": 1.3641028005982097
+    },
+    {
+      "session_id": "20ff773d-77c4-440e-aa17-2aca4e9aa93d",
+      "session_duration_sec": 51.40145492553711,
+      "avg_stress_score": 14.752004456871303,
+      "stress_stability": 14.49100891287484,
+      "time_in_states_percent": {
+        "Calm": 86.85171658144631,
+        "Mild Stress": 13.148283418553689,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "fear": 10,
+        "angry": 90,
+        "neutral": 770,
+        "happy": 490
+      },
+      "emotional_balance_index": 0.9264705882352942,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 51.40145492553711,
+      "avg_music_volume": 0.3525931336742147
+    },
+    {
+      "session_id": "037b5f14-0c67-41bb-8d55-0ebec1b67e22",
+      "session_duration_sec": 26.609355926513672,
+      "avg_stress_score": 1.7717837172313868,
+      "stress_stability": 2.9292024572166744,
+      "time_in_states_percent": {
+        "Calm": 100.0,
+        "Mild Stress": 0.0,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "neutral": 517,
+        "happy": 130
+      },
+      "emotional_balance_index": 1.0,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 26.609355926513672,
+      "avg_music_volume": 0.29999999999999993
+    },
+    {
+      "session_id": "3b0bedf0-9bfa-4862-b071-73a0b5f4bcac",
+      "session_duration_sec": 10.210068941116333,
+      "avg_stress_score": 0.0,
+      "stress_stability": 0.0,
+      "time_in_states_percent": {
+        "Calm": 100.0,
+        "Mild Stress": 0.0,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "neutral": 182
+      },
+      "emotional_balance_index": 1.0,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 10.210068941116333,
+      "avg_music_volume": 0.3
+    },
+    {
+      "session_id": "a78e49b0-c988-4d53-beac-f28d464f8502",
+      "session_duration_sec": 3.3898417949676514,
+      "avg_stress_score": 0.0,
+      "stress_stability": 0.0,
+      "time_in_states_percent": {
+        "Calm": 100.0,
+        "Mild Stress": 0.0,
+        "Overload Risk": 0.0
+      },
+      "overload_events": 0,
+      "emotion_distribution": {
+        "neutral": 30
+      },
+      "emotional_balance_index": 1.0,
+      "recovery_score": 1.0,
+      "engagement_duration_sec": 3.3898417949676514,
+      "avg_music_volume": 0.3000000000000001,
+      "caregiver_ratings": {
+        "calmness_level": 5,
+        "attention_level": 5,
+        "willingness_to_engage": 5,
+        "emotional_response": 5,
+        "engagement_duration": 5
+      },
+      "llm_analysis": {
+        "preview": "LLM error: Hugging Face inference error: ",
+        "clinician_annotated_report": "",
+        "clinician_confirmed": true,
+        "clinician_ts": 1763572749.090692
+      }
+    }
+  ]
+}
